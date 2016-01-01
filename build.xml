@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="deploy"> 
+
+	<property name="src" location="src"/>
+
+	<property name="build.home" location="build"/> 					<!--build文件夹的根目录-->
+	<property name="build.classes" location="${build.home}/classes"/> <!--build产生的class文件位置-->
+	<property name="build.war" location="${build.home}/war"/>  		<!--war文件地址-->
+
+	<property name="web.name" value="Ant-Web.war"/>   					<!--web项目名字,war文件名字-->
+	<property name="web.WEB-ROOT" location="WebContent"/>    		<!--WebRoot文件夹目录,把这里的文件打到war包-->
+	<property name="web.WEB-INFO" value="${web.WEB-ROOT}/WEB-INF"/> <!--WEB-INFO文件夹-->
+	<property name="web.lib" location="${web.WEB-INFO}/lib"/>       <!--web项目依赖jar包-->
+	<property environment="env"></property>     					<!--引入系统环境变量-->
+	
+	
+	<path id="compileDepend">  <!--定义web项目的第三方jar包位置-->
+		<fileset dir="${web.lib}" includes="*.jar"></fileset>
+		<fileset dir="${env.CATALINA_HOME}/lib" includes="*.jar"></fileset>  <!--依赖tomcat的HTTPrequest,HTTPresponse-->
+	</path>
+
+	<!--初始化创建文件夹-->
+	<target name="init">
+		<delete dir="${build.home}"/>
+		<mkdir dir="${build.home}"/>
+		<mkdir dir="${build.classes}"/>
+		<mkdir dir="${build.war}"/>
+	</target>
+	
+	<target name="compile" depends="init">
+		<javac destdir="${build.classes}" srcdir="${src}" classpathref="compileDepend" includeantruntime="false"></javac>
+	</target>
+	
+	<target name="makeWAR" depends="compile">
+		<war destfile="${build.war}/${web.name}"> <!--打包 : web-info文件夹,classed文件夹,lib依赖jar-->
+			<fileset dir="${web.WEB-ROOT}" includes="**/*.*"/> <!--将WEB-Root文件夹下的web.xml打到war包-->
+			<lib dir="${web.lib}"></lib>                       <!--在WEB_INFO目录下加入第三方jar包-->
+			<webinf dir="${web.WEB-INFO}"></webinf>			   <!--把WEB-INFO打到war包-->
+			<classes dir="${build.classes}"></classes>         <!--把编译好的class文件加入到WEB-INF-->
+		</war>
+	</target>
+	
+	<target name="deploy" depends="makeWAR">
+		<copy todir="${env.CATALINA_HOME}/webapps">
+			<fileset dir="${build.war}" includes="*.war"/>
+		</copy>
+	</target>
+
+</project>
